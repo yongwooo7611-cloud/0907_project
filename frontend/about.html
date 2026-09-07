@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="프론트엔드 개발자 김용우의 소개와 일하는 방식을 확인하세요.">
+  <title>소개 | 김용우</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">본문으로 바로가기</a>
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="logo" href="index.html" aria-label="홈으로 이동">YW<span>.</span></a>
+      <nav class="site-nav" aria-label="주요 메뉴">
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-list"><span class="sr-only">메뉴 열기</span><span></span><span></span><span></span></button>
+        <ul class="nav-list" id="nav-list">
+          <li><a class="is-active" aria-current="page" href="about.html">소개</a></li>
+          <li><a href="skills.html">기술</a></li>
+          <li><a href="projects.html">프로젝트</a></li>
+          <li><a href="index.html#experience">경력</a></li>
+        </ul>
+      </nav>
+      <button class="theme-toggle" type="button" aria-label="다크 모드로 전환" title="테마 전환"><span class="theme-icon" aria-hidden="true">☾</span></button>
+    </div>
+  </header>
+  <main id="main-content" class="subpage-main">
+    <section class="subpage-hero">
+      <div class="container reveal">
+        <p class="section-number">ABOUT ME</p>
+        <h1>사람을 이해하고,<br><span>더 나은 경험을 만듭니다.</span></h1>
+        <p>기술로 복잡함을 덜어내고 누구나 편안하게 사용할 수 있는 화면을 만드는 프론트엔드 개발자 김용우입니다.</p>
+      </div>
+    </section>
+    <section class="section subpage-content" id="about">
+      <div class="container about-grid">
+        <div class="profile-summary reveal">
+          <img src="assets/images/dog.jpg" alt="잔디밭에 앉아 있는 흰색 강아지 프로필 사진">
+          <div><strong>김용우</strong><span>Frontend Developer · Seoul</span></div>
+        </div>
+        <div class="about-content reveal">
+          <p class="lead">좋은 질문에서 좋은 제품이 시작된다고 믿습니다.</p>
+          <p>프론트엔드 개발을 중심으로 접근성과 성능을 함께 고민합니다. 디자이너와 사용자의 언어를 이해하고, 아이디어를 안정적인 인터페이스로 옮기는 과정을 좋아합니다.</p>
+          <p>현재는 JavaScript의 기본기를 단단히 다지는 동시에 반복 가능한 컴포넌트 설계와 더 나은 사용자 피드백을 학습하고 있습니다.</p>
+          <div class="principles">
+            <div><span>01</span><strong>명확하게</strong><p>복잡함을 덜어내고 핵심에 집중합니다.</p></div>
+            <div><span>02</span><strong>함께</strong><p>열린 대화로 더 나은 답을 찾습니다.</p></div>
+            <div><span>03</span><strong>끝까지</strong><p>작은 디테일까지 책임지고 완성합니다.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer"><div class="container"><p>© <span id="current-year"></span> 김용우. Built with care.</p><a href="#top">맨 위로 <span aria-hidden="true">↑</span></a></div></footer>
+</body>
+</html>

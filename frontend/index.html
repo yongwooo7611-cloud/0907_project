@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="w프로idth=device-width, initial-scale=1.0">
+  <meta name="description" content="사용자를 생각하며 웹 경험을 만드는 프론트엔드 개발자 김용우의 포트폴리오입니다.">
+  <title>김용우 | Frontend Developer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">본문으로 바로가기</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="logo" href="#home" aria-label="홈으로 이동">YW<span>.</span></a>
+      <nav class="site-nav" aria-label="주요 메뉴">
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-list">
+          <span class="sr-only">메뉴 열기</span>
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-list" id="nav-list">
+          <li><a href="about.html">소개</a></li>
+          <li><a href="skills.html">기술</a></li>
+          <li><a href="projects.html">프로젝트</a></li>
+          <li><a href="#experience">경력</a></li>
+        </ul>
+      </nav>
+      <button class="theme-toggle" type="button" aria-label="다크 모드로 전환" title="테마 전환">
+        <span class="theme-icon" aria-hidden="true">☾</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="home" aria-labelledby="hero-title">
+      <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
+      <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
+      <div class="container hero-grid">
+        <div class="hero-copy reveal">
+          <p class="eyebrow"><span></span> 새로운 기회를 기다리고 있어요</p>
+          <h1 id="hero-title">안녕하세요,<br><strong>경험을 설계하는</strong><br>개발자 김용우입니다.</h1>
+          <p class="hero-description">복잡한 문제를 단순하게 풀고, 누구나 편안하게 사용할 수 있는 웹을 만듭니다. 작은 디테일이 좋은 경험을 만든다고 믿습니다.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#projects">프로젝트 보기 <span aria-hidden="true">↗</span></a>
+            <a class="button button-secondary" href="#contact">함께 이야기하기</a>
+          </div>
+          <ul class="quick-stats" aria-label="간략한 이력">
+            <li><strong>3+</strong><span>Years experience</span></li>
+            <li><strong>12</strong><span>Projects shipped</span></li>
+            <li><strong>100%</strong><span>Curiosity</span></li>
+          </ul>
+        </div>
+        <div class="hero-visual reveal">
+          <div class="portrait-card">
+            <div class="portrait-pattern" aria-hidden="true"></div>
+            <img class="portrait-image" src="assets/images/dog.jpg" alt="잔디밭에 앉아 있는 흰색 강아지 프로필 사진">
+            <div class="floating-label label-code"><span>&lt;/&gt;</span> Clean code</div>
+            <div class="floating-label label-user"><span>✦</span> User first</div>
+          </div>
+          <p class="location"><span aria-hidden="true">⌖</span> Seoul, South Korea</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section about" id="about" aria-labelledby="about-title">
+      <div class="container about-grid">
+        <div class="section-heading reveal">
+          <p class="section-number">01 / ABOUT</p>
+          <h2 id="about-title">좋은 질문에서<br>좋은 제품이 시작됩니다.</h2>
+        </div>
+        <div class="about-content reveal">
+          <p class="lead">기술 그 자체보다, 기술로 해결할 수 있는 사람의 문제에 관심이 많습니다.</p>
+          <p>프론트엔드 개발을 중심으로 접근성과 성능을 함께 고민합니다. 디자이너와 사용자의 언어를 이해하고, 아이디어를 안정적인 인터페이스로 옮기는 과정을 좋아합니다.</p>
+          <p>현재는 JavaScript의 기초를 단단히 다지는 동시에, 반복 가능한 컴포넌트 설계와 더 나은 사용자 피드백을 학습하고 있습니다.</p>
+          <div class="principles">
+            <div><span>01</span><strong>명확하게</strong><p>복잡함을 덜어내고 핵심에 집중합니다.</p></div>
+            <div><span>02</span><strong>함께</strong><p>열린 대화로 더 나은 답을 찾습니다.</p></div>
+            <div><span>03</span><strong>끝까지</strong><p>작은 디테일까지 책임지고 완성합니다.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section skills" id="skills" aria-labelledby="skills-title">
+      <div class="container">
+        <div class="section-heading centered reveal">
+          <p class="section-number">02 / SKILLS</p>
+          <h2 id="skills-title">제가 사용하는 도구들</h2>
+          <p>목적에 맞는 기술을 선택하고, 기본에 충실하게 사용합니다.</p>
+        </div>
+        <div class="skills-grid">
+          <article class="skill-card reveal"><div class="skill-icon html">H</div><div><h3>HTML</h3><p>시맨틱 마크업 · 접근성</p></div><span>고급</span></article>
+          <article class="skill-card reveal"><div class="skill-icon css">C</div><div><h3>CSS</h3><p>반응형 · 애니메이션</p></div><span>고급</span></article>
+          <article class="skill-card reveal"><div class="skill-icon js">JS</div><div><h3>JavaScript</h3><p>ES6+ · DOM · 비동기</p></div><span>중급</span></article>
+          <article class="skill-card reveal"><div class="skill-icon git">G</div><div><h3>Git & GitHub</h3><p>버전 관리 · 협업</p></div><span>중급</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section projects" id="projects" aria-labelledby="projects-title">
+      <div class="container">
+        <div class="section-heading row reveal">
+          <div><p class="section-number">03 / PROJECTS</p><h2 id="projects-title">선택한 프로젝트</h2></div>
+          <p>문제를 발견하고 해결해 나간<br>과정을 담은 작업들입니다.</p>
+        </div>
+        <div class="projects-grid">
+          <article class="project-card reveal">
+            <div class="project-cover cover-one"><span class="mock-browser"><i></i><i></i><i></i><b>PLANTLY</b><em></em></span></div>
+            <div class="project-body"><div class="project-meta"><span>Web App</span><span>2026</span></div><h3>Plantly</h3><p>식물의 성장 기록과 물주기 알림을 한곳에서 관리하는 반응형 대시보드입니다.</p><ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li></ul><div class="project-links"><a href="#" aria-label="Plantly 데모 보기">Live demo ↗</a><a href="#" aria-label="Plantly 소스 코드 보기">Source ↗</a></div></div>
+          </article>
+          <article class="project-card reveal">
+            <div class="project-cover cover-two"><span class="phone-mock"><i></i><b>오늘의 집중</b><em>42:18</em></span></div>
+            <div class="project-body"><div class="project-meta"><span>Productivity</span><span>2026</span></div><h3>Focus Flow</h3><p>집중 시간과 휴식을 자연스럽게 관리하고 학습 통계를 확인하는 타이머입니다.</p><ul class="tags"><li>JavaScript</li><li>LocalStorage</li><li>Chart</li></ul><div class="project-links"><a href="#" aria-label="Focus Flow 데모 보기">Live demo ↗</a><a href="#" aria-label="Focus Flow 소스 코드 보기">Source ↗</a></div></div>
+          </article>
+          <article class="project-card reveal">
+            <div class="project-cover cover-three"><span class="weather-mock"><b>SEOUL</b><strong>24°</strong><em>맑고 따뜻해요</em><i></i></span></div>
+            <div class="project-body"><div class="project-meta"><span>API Service</span><span>2025</span></div><h3>Weatherly</h3><p>현재 위치와 검색한 도시의 날씨를 직관적인 화면으로 보여주는 서비스입니다.</p><ul class="tags"><li>REST API</li><li>Async JS</li><li>CSS</li></ul><div class="project-links"><a href="#" aria-label="Weatherly 데모 보기">Live demo ↗</a><a href="#" aria-label="Weatherly 소스 코드 보기">Source ↗</a></div></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section experience" id="experience" aria-labelledby="experience-title">
+      <div class="container experience-grid">
+        <div class="section-heading reveal"><p class="section-number">04 / EXPERIENCE</p><h2 id="experience-title">배우고 성장한 기록</h2><p>꾸준히 시도하고 기록하며 어제보다 나은 방법을 찾습니다.</p></div>
+        <ol class="timeline">
+          <li class="reveal"><div class="timeline-date">2025 — 현재</div><div><h3>프론트엔드 개발자</h3><p class="organization">스튜디오 모노 · 서울</p><p>사용자 중심의 웹 인터페이스를 구현하고 디자인 시스템을 정리했습니다. 반복 작업을 줄여 팀의 개발 속도를 개선했습니다.</p></div></li>
+          <li class="reveal"><div class="timeline-date">2024 — 2025</div><div><h3>웹 개발 부트캠프</h3><p class="organization">코드캠퍼스</p><p>웹 표준과 JavaScript를 학습하고 팀 프로젝트를 통해 기획부터 배포까지의 과정을 경험했습니다.</p></div></li>
+          <li class="reveal"><div class="timeline-date">2023 — 2024</div><div><h3>개인 프로젝트 & 학습</h3><p class="organization">Independent</p><p>작은 아이디어를 직접 구현하며 Git, 반응형 웹, 웹 접근성의 기본기를 쌓았습니다.</p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section contact" id="contact" aria-labelledby="contact-title">
+      <div class="container contact-inner reveal">
+        <p class="section-number">05 / CONTACT</p>
+        <h2 id="contact-title">재미있는 아이디어가 있나요?<br><span>함께 만들어 봐요.</span></h2>
+        <p>새로운 프로젝트, 협업 또는 가벼운 인사도 좋습니다.<br>메일을 보내주시면 확인 후 답장드릴게요.</p>
+        <a class="contact-email" href="mailto:hello@example.com">hello@example.com <span aria-hidden="true">↗</span></a>
+        <div class="social-links"><a href="https://github.com/" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a><a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Instagram ↗</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container"><p>© <span id="current-year"></span> 김용우. Built with care.</p><a href="#top">맨 위로 <span aria-hidden="true">↑</span></a></div>
+  </footer>
+</body>
+</html>
