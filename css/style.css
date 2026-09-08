@@ -14,3 +14,4 @@
 @media(min-width:1024px){.post-grid{grid-template-columns:repeat(4,1fr)}.card-cover{aspect-ratio:1.25}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
 .reveal{opacity:1;transform:none}
+button:disabled{cursor:wait;opacity:.65}
