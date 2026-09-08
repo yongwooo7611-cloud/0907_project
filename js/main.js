@@ -1,4 +1,4 @@
-const AUTH_API_URL='https://script.google.com/macros/s/AKfycbyz7thrApTe2OnKdSJMetrSwzNMwCPJrpPhCCiewkWr2NJPj1KdL3z7lHhlLqOdrb2FNQ/exec';
+const AUTH_API_URL='https://script.google.com/macros/s/AKfycbwJezDPH2whxOzWl4wZZWIGpr9re0UOgdZ4dfxZIWVWsFE5GZMbpLeyradJ9HjEYDiItQ/exec';
 const root=document.documentElement,menu=document.querySelector('.menu-toggle'),nav=document.querySelector('.nav-list'),theme=document.querySelector('.theme-toggle'),icon=document.querySelector('.theme-icon'),toast=document.querySelector('.toast');
 function setTheme(value){root.dataset.theme=value;if(!theme)return;const dark=value==='dark';icon.textContent=dark?'☀':'☾';theme.setAttribute('aria-label',dark?'라이트 모드로 전환':'다크 모드로 전환')}
 setTheme(localStorage.getItem('blog-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
