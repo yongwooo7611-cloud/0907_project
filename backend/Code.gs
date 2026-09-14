@@ -8,6 +8,7 @@
 const SPREADSHEET_ID = '12TeozwfHAJKX6m3vx1ul_ngI2zRR1eJaW6OwkEykARE';
 const USERS_SHEET = 'Users';
 const SESSIONS_SHEET = 'Sessions';
+const POSTS_SHEET = 'Posts';
 const SESSION_DAYS = 7;
 const LOGIN_LIMIT = 5;
 const LOGIN_BLOCK_SECONDS = 600;
@@ -30,6 +31,19 @@ const SESSION_HEADERS = [
   'userId',
   'expiresAt',
   'createdAt'
+];
+
+const POST_HEADERS = [
+  'id',
+  'userId',
+  'title',
+  'category',
+  'tags',
+  'summary',
+  'body',
+  'status',
+  'createdAt',
+  'updatedAt'
 ];
 
 /** Apps Script 편집기에서 최초 1회 직접 실행합니다. */
@@ -63,6 +77,18 @@ function doPost(e) {
         return json_(getCurrentUser_(body.token));
       case 'logout':
         return json_(logout_(body.token));
+      case 'listPosts':
+        return json_(listPosts_());
+      case 'getPost':
+        return json_(getPost_(body.id));
+      case 'myPosts':
+        return json_(myPosts_(body.token));
+      case 'createPost':
+        return json_(createPost_(body));
+      case 'updatePost':
+        return json_(updatePost_(body));
+      case 'deletePost':
+        return json_(deletePost_(body));
       default:
         throw new Error('지원하지 않는 요청입니다.');
     }
@@ -83,6 +109,7 @@ function ensureAuthReady_() {
     const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
     ensureSheet_(spreadsheet, USERS_SHEET, USER_HEADERS);
     ensureSheet_(spreadsheet, SESSIONS_SHEET, SESSION_HEADERS);
+    ensureSheet_(spreadsheet, POSTS_SHEET, POST_HEADERS);
 
     const properties = PropertiesService.getScriptProperties();
     if (!properties.getProperty('PASSWORD_PEPPER')) {
@@ -91,6 +118,145 @@ function ensureAuthReady_() {
   } finally {
     lock.releaseLock();
   }
+}
+
+function listPosts_() {
+  const posts = readObjects_(getSheet_(POSTS_SHEET))
+    .filter(post => post.status === 'published')
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const users = readObjects_(getSheet_(USERS_SHEET));
+  return { ok: true, posts: posts.map(post => publicPost_(post, users)) };
+}
+
+function getPost_(id) {
+  const post = findPostById_(id);
+  if (!post || post.status !== 'published') throw new Error('게시물을 찾을 수 없습니다.');
+  return { ok: true, post: publicPost_(post, readObjects_(getSheet_(USERS_SHEET))) };
+}
+
+function myPosts_(token) {
+  const session = findValidSession_(token);
+  const posts = readObjects_(getSheet_(POSTS_SHEET))
+    .filter(post => String(post.userId) === String(session.userId))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const users = readObjects_(getSheet_(USERS_SHEET));
+  return { ok: true, posts: posts.map(post => publicPost_(post, users)) };
+}
+
+function createPost_(body) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const session = findValidSession_(body.token);
+    const values = validatePost_(body);
+    const now = new Date().toISOString();
+    const post = {
+      id: Utilities.getUuid(),
+      userId: String(session.userId),
+      title: values.title,
+      category: values.category,
+      tags: values.tags,
+      summary: values.summary,
+      body: values.body,
+      status: 'published',
+      createdAt: now,
+      updatedAt: now
+    };
+    getSheet_(POSTS_SHEET).appendRow(postRow_(post));
+    return {
+      ok: true,
+      message: '게시물이 발행되었습니다.',
+      post: publicPost_(post, readObjects_(getSheet_(USERS_SHEET)))
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function updatePost_(body) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const session = findValidSession_(body.token);
+    const sheet = getSheet_(POSTS_SHEET);
+    const posts = readObjects_(sheet);
+    const index = posts.findIndex(post => String(post.id) === String(body.id || ''));
+    if (index < 0) throw new Error('게시물을 찾을 수 없습니다.');
+    if (String(posts[index].userId) !== String(session.userId)) {
+      throw new Error('이 게시물을 수정할 권한이 없습니다.');
+    }
+    const values = validatePost_(body);
+    const post = Object.assign({}, posts[index], values, { updatedAt: new Date().toISOString() });
+    sheet.getRange(index + 2, 1, 1, POST_HEADERS.length).setValues([postRow_(post)]);
+    return {
+      ok: true,
+      message: '게시물이 수정되었습니다.',
+      post: publicPost_(post, readObjects_(getSheet_(USERS_SHEET)))
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deletePost_(body) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const session = findValidSession_(body.token);
+    const sheet = getSheet_(POSTS_SHEET);
+    const posts = readObjects_(sheet);
+    const index = posts.findIndex(post => String(post.id) === String(body.id || ''));
+    if (index < 0) throw new Error('게시물을 찾을 수 없습니다.');
+    if (String(posts[index].userId) !== String(session.userId)) {
+      throw new Error('이 게시물을 삭제할 권한이 없습니다.');
+    }
+    sheet.deleteRow(index + 2);
+    return { ok: true, message: '게시물이 삭제되었습니다.' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function validatePost_(body) {
+  return {
+    title: cleanText_(body.title, '제목', 120),
+    category: cleanText_(body.category, '카테고리', 30),
+    tags: cleanOptionalText_(Array.isArray(body.tags) ? body.tags.join(',') : body.tags, '태그', 300),
+    summary: cleanOptionalText_(body.summary, '한 줄 소개', 300),
+    body: cleanText_(body.body, '본문', 30000)
+  };
+}
+
+function findPostById_(id) {
+  const postId = String(id || '').trim();
+  if (!postId) throw new Error('게시물 ID가 필요합니다.');
+  return readObjects_(getSheet_(POSTS_SHEET)).find(post => String(post.id) === postId);
+}
+
+function postRow_(post) {
+  return POST_HEADERS.map(header => {
+    const value = post[header] == null ? '' : String(post[header]);
+    return ['title', 'category', 'tags', 'summary', 'body'].includes(header) ? protectCell_(value) : value;
+  });
+}
+
+function publicPost_(post, users) {
+  const user = users.find(item => String(item.id) === String(post.userId)) || {};
+  return {
+    id: String(post.id),
+    title: unprotectCell_(post.title),
+    category: unprotectCell_(post.category),
+    tags: unprotectCell_(post.tags || '').split(',').map(tag => tag.trim()).filter(Boolean),
+    summary: unprotectCell_(post.summary || ''),
+    body: unprotectCell_(post.body),
+    status: String(post.status),
+    createdAt: String(post.createdAt),
+    updatedAt: String(post.updatedAt),
+    author: {
+      name: String(user.name || '').replace(/^'/, ''),
+      nickname: String(user.nickname || '').replace(/^'/, '')
+    }
+  };
 }
 
 function signup_(body) {
@@ -325,8 +491,18 @@ function cleanText_(value, label, maxLength) {
   return text;
 }
 
+function cleanOptionalText_(value, label, maxLength) {
+  const text = String(value || '').trim();
+  if (text.length > maxLength) throw new Error(`${label}은(는) ${maxLength}자 이하여야 합니다.`);
+  return text;
+}
+
 function protectCell_(value) {
   return /^[=+\-@]/.test(value) ? `'${value}` : value;
+}
+
+function unprotectCell_(value) {
+  return String(value || '').replace(/^'(?=[=+\-@])/, '');
 }
 
 function publicUser_(user) {

@@ -19,7 +19,7 @@ async function authRequest(payload){
   const response=await fetch(AUTH_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
   const text=await response.text();
   let result;
-  try{result=JSON.parse(text)}catch(error){throw new Error('인증 서버에 접근할 수 없습니다. Apps Script 배포 권한을 “모든 사용자”로 설정해 주세요.')}
+  try{result=JSON.parse(text)}catch(error){throw new Error('블로그 서버에 접근할 수 없습니다. Apps Script 배포 권한을 “모든 사용자”로 설정해 주세요.')}
   if(!result.ok)throw new Error(result.message||'요청을 처리하지 못했습니다.');
   return result;
 }
@@ -125,6 +125,117 @@ async function refreshAuthUI(){
 }
 if(new URLSearchParams(location.search).get('registered')==='1')setTimeout(()=>showToast('회원가입이 완료되었습니다. 로그인해 주세요.'),100);
 refreshAuthUI();
-document.querySelector('#write-form')?.addEventListener('submit',e=>{e.preventDefault();const title=document.querySelector('#post-title'),body=document.querySelector('#post-body');if(!title.value.trim()||!body.value.trim()){showToast('제목과 내용을 입력해 주세요.');return}localStorage.setItem('blog-draft',JSON.stringify({title:title.value,category:document.querySelector('#post-category').value,body:body.value,savedAt:new Date().toISOString()}));showToast('게시물이 발행되었습니다.');setTimeout(()=>location.href='index.html',650)});
-document.querySelector('#save-draft')?.addEventListener('click',()=>{localStorage.setItem('blog-draft',JSON.stringify({title:document.querySelector('#post-title').value,category:document.querySelector('#post-category').value,body:document.querySelector('#post-body').value,savedAt:new Date().toISOString()}));showToast('임시 저장했습니다.')});
+function formatPostDate(value){const date=new Date(value);return Number.isNaN(date.getTime())?'':new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).format(date)}
+function getPostFormData(){return{title:document.querySelector('#post-title').value.trim(),category:document.querySelector('#post-category').value,tags:document.querySelector('#post-tags').value.split(',').map(tag=>tag.trim()).filter(Boolean),summary:document.querySelector('#post-summary').value.trim(),body:document.querySelector('#post-body').value.trim()}}
+function fillPostForm(post){document.querySelector('#post-title').value=post.title||'';document.querySelector('#post-category').value=post.category||'개발';document.querySelector('#post-tags').value=(post.tags||[]).join(', ');document.querySelector('#post-summary').value=post.summary||'';document.querySelector('#post-body').value=post.body||''}
+
+const writeForm=document.querySelector('#write-form');
+const editingPostId=writeForm?new URLSearchParams(location.search).get('id'):'';
+writeForm?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const post=getPostFormData();
+  if(!post.title||!post.body){showToast('제목과 내용을 입력해 주세요.');return}
+  const payload={action:editingPostId?'updatePost':'createPost',token:getAuthToken(),...post};
+  if(editingPostId)payload.id=editingPostId;
+  setFormBusy(writeForm,true);
+  try{
+    const result=await authRequest(payload);
+    localStorage.removeItem('blog-draft');
+    showToast(result.message);
+    setTimeout(()=>location.href=`post-detail.html?id=${encodeURIComponent(result.post.id)}`,650);
+  }catch(error){showToast(error.message);setFormBusy(writeForm,false)}
+});
+document.querySelector('#save-draft')?.addEventListener('click',()=>{localStorage.setItem('blog-draft',JSON.stringify({...getPostFormData(),savedAt:new Date().toISOString()}));showToast('임시 저장했습니다.')});
+
+async function initializeWriteForm(){
+  if(!writeForm)return;
+  if(editingPostId){
+    try{
+      const result=await authRequest({action:'myPosts',token:getAuthToken()});
+      const post=result.posts.find(item=>item.id===editingPostId);
+      if(!post)throw new Error('수정할 게시물을 찾을 수 없습니다.');
+      fillPostForm(post);
+      document.querySelector('#write-heading').textContent='기록 수정하기';
+      document.querySelector('#publish-post').textContent='수정 완료';
+      document.title='글 수정 | 기록의 조각';
+    }catch(error){showToast(error.message);setTimeout(()=>location.href='profile.html',900)}
+    return;
+  }
+  try{const draft=JSON.parse(localStorage.getItem('blog-draft')||'null');if(draft)fillPostForm(draft)}catch(error){localStorage.removeItem('blog-draft')}
+}
+
+function createPostCard(post){
+  const article=document.createElement('article');article.className='post-card managed-post-card';article.dataset.post='';article.dataset.category=post.category;
+  const postHref=`post-detail.html?id=${encodeURIComponent(post.id)}`;
+  const visualByCategory={개발:'visual-purple',회고:'visual-green',일상:'visual-orange',책:'visual-blue'};
+  const cover=document.createElement('a');cover.className=`card-cover ${visualByCategory[post.category]||'visual-navy'}`;cover.href=postHref;cover.setAttribute('aria-label',`${post.title} 읽기`);
+  const coverLabel=document.createElement('strong');coverLabel.textContent=post.category;cover.append(coverLabel);
+  const body=document.createElement('div');body.className='card-body';
+  const meta=document.createElement('div');meta.className='post-meta';
+  const category=document.createElement('span');category.textContent=post.category;const time=document.createElement('time');time.dateTime=post.createdAt;time.textContent=formatPostDate(post.createdAt);meta.append(category,time);
+  const heading=document.createElement('h3');const title=document.createElement('a');title.href=cover.href;title.textContent=post.title;heading.append(title);
+  const summary=document.createElement('p');summary.textContent=post.summary||post.body.slice(0,90);
+  const more=document.createElement('a');more.className='read-more';more.href=cover.href;more.textContent='읽어보기 →';
+  body.append(meta,heading,summary,more);article.append(cover,body);
+  article.addEventListener('click',event=>{if(!event.target.closest('a'))location.href=postHref});
+  return article;
+}
+
+async function loadPublishedPosts(){
+  const container=document.querySelector('#published-posts');if(!container)return;
+  try{
+    const result=await authRequest({action:'listPosts'});
+    if(!result.posts.length){const empty=document.createElement('p');empty.className='posts-loading';empty.textContent='아직 발행된 게시물이 없습니다.';container.replaceChildren(empty);return}
+    const grid=document.createElement('div');grid.className='post-grid dynamic-post-grid';result.posts.forEach(post=>grid.append(createPostCard(post)));
+    container.replaceChildren(grid);filter();
+  }catch(error){const message=document.createElement('p');message.className='posts-load-error';message.textContent=error.message;container.replaceChildren(message)}
+}
+
+function createMyPostRow(post){
+  const item=document.createElement('article');item.className='my-post-item';item.dataset.postId=post.id;
+  const content=document.createElement('div');
+  const meta=document.createElement('p');meta.className='my-post-meta';meta.textContent=`${post.category} · ${formatPostDate(post.createdAt)}`;
+  const heading=document.createElement('h3');const link=document.createElement('a');link.href=`post-detail.html?id=${encodeURIComponent(post.id)}`;link.textContent=post.title;heading.append(link);content.append(meta,heading);
+  const actions=document.createElement('div');actions.className='my-post-actions';
+  const edit=document.createElement('a');edit.className='secondary-button';edit.href=`write.html?id=${encodeURIComponent(post.id)}`;edit.textContent='수정';
+  const remove=document.createElement('button');remove.className='danger-button';remove.type='button';remove.dataset.deletePost=post.id;remove.textContent='삭제';actions.append(edit,remove);item.append(content,actions);return item;
+}
+
+async function loadMyPosts(){
+  const container=document.querySelector('#my-posts');if(!container||!getAuthToken())return;
+  container.textContent='작성한 글을 불러오는 중입니다.';
+  try{
+    const result=await authRequest({action:'myPosts',token:getAuthToken()});
+    if(!result.posts.length){const empty=document.createElement('p');empty.className='list-message';empty.textContent='아직 작성한 글이 없습니다.';container.replaceChildren(empty);return}
+    container.replaceChildren(...result.posts.map(createMyPostRow));
+  }catch(error){container.textContent=error.message}
+}
+document.querySelector('#my-posts')?.addEventListener('click',async event=>{
+  const button=event.target.closest('[data-delete-post]');if(!button)return;
+  if(!confirm('이 글을 삭제하시겠습니까? 삭제한 글은 복구할 수 없습니다.'))return;
+  button.disabled=true;
+  try{const result=await authRequest({action:'deletePost',token:getAuthToken(),id:button.dataset.deletePost});showToast(result.message);button.closest('.my-post-item').remove();if(!document.querySelector('.my-post-item'))loadMyPosts()}catch(error){showToast(error.message);button.disabled=false}
+});
+
+async function loadPostDetail(){
+  const article=document.querySelector('#post-detail');const id=new URLSearchParams(location.search).get('id');if(!article)return;
+  if(!id){const message=document.createElement('p');message.className='article-load-error';message.textContent='조회할 게시물을 선택해 주세요.';article.replaceChildren(message);return}
+  article.setAttribute('aria-busy','true');
+  try{
+    const {post}=await authRequest({action:'getPost',id});
+    document.title=`${post.title} | 기록의 조각`;
+    const header=document.createElement('header');header.className='article-header article-wrap';
+    const meta=document.createElement('div');meta.className='post-meta';const category=document.createElement('span');category.textContent=post.category;const time=document.createElement('time');time.dateTime=post.createdAt;time.textContent=formatPostDate(post.createdAt);const reading=document.createElement('span');reading.textContent=`${Math.max(1,Math.ceil(post.body.length/500))}분 읽기`;meta.append(category,time,reading);
+    const heading=document.createElement('h1');heading.textContent=post.title;const lead=document.createElement('p');lead.className='article-lead';lead.textContent=post.summary;header.append(meta,heading,lead);
+    const content=document.createElement('div');content.className='article-wrap article-body dynamic-article-body';const postBody=document.createElement('div');postBody.className='post-content';postBody.textContent=post.body;content.append(postBody);
+    if(post.tags.length){const tags=document.createElement('div');tags.className='article-tags';post.tags.forEach(tag=>{const span=document.createElement('span');span.textContent=`#${tag.replace(/^#/,'')}`;tags.append(span)});content.append(tags)}
+    const author=document.createElement('aside');author.className='author-box';const image=document.createElement('img');image.src='assets/images/dog.jpg';image.alt='';const authorText=document.createElement('div');const authorName=document.createElement('h3');authorName.textContent=post.author.nickname||post.author.name||'작성자';const description=document.createElement('p');description.textContent='기록의 조각에 글을 남기는 작성자입니다.';authorText.append(authorName,description);author.append(image,authorText);content.append(author);
+    article.replaceChildren(header,content);article.removeAttribute('aria-busy');
+  }catch(error){const message=document.createElement('p');message.className='article-load-error';message.textContent=error.message;article.replaceChildren(message)}
+}
+
+initializeWriteForm();
+loadPublishedPosts();
+loadMyPosts();
+loadPostDetail();
 document.querySelectorAll('[data-format]').forEach(button=>button.addEventListener('click',()=>{const area=document.querySelector('#post-body'),map={bold:['**','**'],italic:['_','_'],quote:['> ',''],link:['[링크 텍스트](',')']},[before,after]=map[button.dataset.format],start=area.selectionStart,end=area.selectionEnd;area.setRangeText(before+area.value.slice(start,end)+after,start,end,'select');area.focus()}));

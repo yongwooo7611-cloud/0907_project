@@ -16,6 +16,7 @@ Apps Script 상단 함수 목록에서 `setupAuth`를 선택해 한 번 실행�
 
 - `Users`: 사용자 정보와 비밀번호 해시
 - `Sessions`: 로그인 세션의 토큰 해시와 만료시간
+- `Posts`: 게시물 내용, 작성자, 생성·수정시간
 
 `PASSWORD_PEPPER`는 Apps Script의 스크립트 속성에 자동 생성됩니다. 이 값이 삭제되면 기존 비밀번호를 검증할 수 없으므로 삭제하지 마세요.
 
@@ -92,6 +93,30 @@ body: JSON.stringify({ action: 'me', token })
 ```javascript
 body: JSON.stringify({ action: 'logout', token })
 ```
+
+### 게시물 CRUD
+
+```javascript
+// 전체 게시물과 게시물 상세는 로그인 없이 조회할 수 있습니다.
+body: JSON.stringify({ action: 'listPosts' })
+body: JSON.stringify({ action: 'getPost', id: '게시물 ID' })
+
+// 작성, 내 글 목록, 수정, 삭제는 로그인 토큰이 필요합니다.
+body: JSON.stringify({ action: 'myPosts', token })
+body: JSON.stringify({
+  action: 'createPost', token,
+  title: '제목', category: '개발', tags: ['태그'], summary: '소개', body: '본문'
+})
+body: JSON.stringify({
+  action: 'updatePost', token, id: '게시물 ID',
+  title: '수정 제목', category: '개발', tags: [], summary: '', body: '수정 본문'
+})
+body: JSON.stringify({ action: 'deletePost', token, id: '게시물 ID' })
+```
+
+수정과 삭제는 서버에서 세션의 사용자 ID와 게시물 작성자 ID가 일치할 때만 처리합니다.
+`Code.gs`를 변경한 뒤에는 Apps Script의 기존 웹 앱 배포를 수정하고 버전을 반드시
+`새 버전`으로 선택해야 CRUD API가 반영됩니다.
 
 ## 보안 범위
 
