@@ -16,3 +16,4 @@
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
 .reveal{opacity:1;transform:none}
 button:disabled{cursor:wait;opacity:.65}
+.reset-card{width:min(100%,520px)}.reset-step{padding:23px 0;border-top:1px solid var(--line)}.reset-step h2{margin-bottom:15px;font:600 1rem "IBM Plex Sans KR"}.reset-step+.reset-step{margin-top:4px}

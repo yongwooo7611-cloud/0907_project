@@ -13,6 +13,8 @@ const SESSION_DAYS = 7;
 const LOGIN_LIMIT = 5;
 const LOGIN_BLOCK_SECONDS = 600;
 const HASH_ROUNDS = 1500;
+const PASSWORD_RESET_SECONDS = 600;
+const PASSWORD_RESET_ATTEMPTS = 5;
 
 const USER_HEADERS = [
   'id',
@@ -77,6 +79,10 @@ function doPost(e) {
         return json_(getCurrentUser_(body.token));
       case 'logout':
         return json_(logout_(body.token));
+      case 'requestPasswordReset':
+        return json_(requestPasswordReset_(body.email));
+      case 'confirmPasswordReset':
+        return json_(confirmPasswordReset_(body));
       case 'listPosts':
         return json_(listPosts_());
       case 'getPost':
@@ -373,6 +379,87 @@ function logout_(token) {
   }
 
   return { ok: true, message: '로그아웃되었습니다.' };
+}
+
+function requestPasswordReset_(emailValue) {
+  const email = normalizeEmail_(emailValue);
+  const users = readObjects_(getSheet_(USERS_SHEET));
+  const user = users.find(item => normalizeEmail_(item.email) === email && item.status === 'active');
+
+  if (user) {
+    const code = createToken_().slice(0, 6).toUpperCase();
+    const cacheKey = passwordResetKey_(email);
+    CacheService.getScriptCache().put(cacheKey, JSON.stringify({
+      userId: String(user.id),
+      codeHash: digest_(code),
+      attempts: 0
+    }), PASSWORD_RESET_SECONDS);
+    MailApp.sendEmail({
+      to: email,
+      subject: '[기록의 조각] 비밀번호 재설정 인증번호',
+      body: `비밀번호 재설정 인증번호는 ${code}입니다.\n\n인증번호는 10분 동안 유효합니다. 본인이 요청하지 않았다면 이 메일을 무시해 주세요.`
+    });
+  }
+
+  return {
+    ok: true,
+    message: '가입된 이메일이라면 인증번호를 전송했습니다. 메일함을 확인해 주세요.'
+  };
+}
+
+function confirmPasswordReset_(body) {
+  const email = normalizeEmail_(body.email);
+  const code = String(body.code || '').trim().toUpperCase();
+  const password = validatePassword_(body.password);
+  const cache = CacheService.getScriptCache();
+  const cacheKey = passwordResetKey_(email);
+  const cached = cache.get(cacheKey);
+  if (!cached) throw new Error('인증번호가 만료되었습니다. 새 인증번호를 요청해 주세요.');
+
+  const reset = JSON.parse(cached);
+  if (Number(reset.attempts || 0) >= PASSWORD_RESET_ATTEMPTS) {
+    cache.remove(cacheKey);
+    throw new Error('인증 시도가 너무 많습니다. 새 인증번호를 요청해 주세요.');
+  }
+  if (!code || !safeEqual_(digest_(code), String(reset.codeHash))) {
+    reset.attempts = Number(reset.attempts || 0) + 1;
+    cache.put(cacheKey, JSON.stringify(reset), PASSWORD_RESET_SECONDS);
+    throw new Error('인증번호가 올바르지 않습니다.');
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sheet = getSheet_(USERS_SHEET);
+    const users = readObjects_(sheet);
+    const index = users.findIndex(user => String(user.id) === String(reset.userId)
+      && normalizeEmail_(user.email) === email);
+    if (index < 0) throw new Error('사용자 정보를 찾을 수 없습니다.');
+    const salt = createToken_();
+    const passwordHashColumn = USER_HEADERS.indexOf('passwordHash') + 1;
+    const passwordSaltColumn = USER_HEADERS.indexOf('passwordSalt') + 1;
+    sheet.getRange(index + 2, passwordHashColumn).setValue(hashPassword_(password, salt));
+    sheet.getRange(index + 2, passwordSaltColumn).setValue(salt);
+    removeUserSessions_(reset.userId);
+    cache.remove(cacheKey);
+  } finally {
+    lock.releaseLock();
+  }
+
+  return { ok: true, message: '비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.' };
+}
+
+function passwordResetKey_(email) {
+  return `password-reset:${digest_(email).slice(0, 32)}`;
+}
+
+function removeUserSessions_(userId) {
+  const sheet = getSheet_(SESSIONS_SHEET);
+  const values = sheet.getDataRange().getValues();
+  const userIdColumn = SESSION_HEADERS.indexOf('userId');
+  for (let row = values.length; row >= 2; row -= 1) {
+    if (String(values[row - 1][userIdColumn]) === String(userId)) sheet.deleteRow(row);
+  }
 }
 
 function createSession_(userId, now) {

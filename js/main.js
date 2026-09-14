@@ -63,6 +63,35 @@ document.querySelectorAll('[data-auth-form]').forEach(form=>form.addEventListene
   }catch(error){showToast(error.message);setFormBusy(form,false)}
 }));
 
+document.querySelector('#reset-request-form')?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  if(!form.reportValidity())return;
+  const email=document.querySelector('#reset-request-email').value.trim();
+  setFormBusy(form,true);
+  try{
+    const result=await authRequest({action:'requestPasswordReset',email});
+    document.querySelector('#reset-email').value=email;
+    document.querySelector('#reset-code').focus();
+    showToast(result.message);
+  }catch(error){showToast(error.message)}finally{setFormBusy(form,false)}
+});
+
+document.querySelector('#reset-confirm-form')?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  if(!form.reportValidity())return;
+  const password=document.querySelector('#reset-password').value;
+  const confirmPassword=document.querySelector('#reset-password-confirm').value;
+  if(password!==confirmPassword){showToast('새 비밀번호가 일치하지 않습니다.');return}
+  setFormBusy(form,true);
+  try{
+    const result=await authRequest({action:'confirmPasswordReset',email:document.querySelector('#reset-email').value.trim(),code:document.querySelector('#reset-code').value.trim(),password});
+    showToast(result.message);
+    setTimeout(()=>location.href='login.html?reset=1',800);
+  }catch(error){showToast(error.message);setFormBusy(form,false)}
+});
+
 async function refreshAuthUI(){
   const token=getAuthToken();
   const requiresAuth=document.body.hasAttribute('data-requires-auth');
@@ -124,6 +153,7 @@ async function refreshAuthUI(){
   }
 }
 if(new URLSearchParams(location.search).get('registered')==='1')setTimeout(()=>showToast('회원가입이 완료되었습니다. 로그인해 주세요.'),100);
+if(new URLSearchParams(location.search).get('reset')==='1')setTimeout(()=>showToast('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.'),100);
 refreshAuthUI();
 function formatPostDate(value){const date=new Date(value);return Number.isNaN(date.getTime())?'':new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).format(date)}
 function getPostFormData(){return{title:document.querySelector('#post-title').value.trim(),category:document.querySelector('#post-category').value,tags:document.querySelector('#post-tags').value.split(',').map(tag=>tag.trim()).filter(Boolean),summary:document.querySelector('#post-summary').value.trim(),body:document.querySelector('#post-body').value.trim()}}

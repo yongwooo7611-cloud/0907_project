@@ -94,6 +94,21 @@ body: JSON.stringify({ action: 'me', token })
 body: JSON.stringify({ action: 'logout', token })
 ```
 
+### 비밀번호 재설정
+
+```javascript
+// 가입 이메일로 10분간 유효한 인증번호를 전송합니다.
+body: JSON.stringify({ action: 'requestPasswordReset', email })
+
+// 인증번호 확인 후 새 salt와 현재 pepper로 비밀번호 해시를 다시 생성합니다.
+body: JSON.stringify({
+  action: 'confirmPasswordReset', email, code: '인증번호', password: '새 비밀번호'
+})
+```
+
+Apps Script가 인증번호 이메일을 보낼 수 있도록 새 버전 배포 과정에서 `MailApp` 권한을
+승인해야 합니다. 비밀번호가 변경되면 해당 사용자의 기존 로그인 세션은 모두 삭제됩니다.
+
 ### 게시물 CRUD
 
 ```javascript
