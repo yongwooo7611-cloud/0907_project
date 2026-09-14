@@ -65,18 +65,63 @@ document.querySelectorAll('[data-auth-form]').forEach(form=>form.addEventListene
 
 async function refreshAuthUI(){
   const token=getAuthToken();
-  if(document.body.hasAttribute('data-requires-auth')&&!token){location.replace('login.html?next=write.html');return}
-  if(!token)return;
+  const requiresAuth=document.body.hasAttribute('data-requires-auth');
+  const actions=document.querySelector('.header-actions');
+
+  function renderAuthActions(user){
+    if(!actions)return;
+    actions.querySelectorAll(':scope > a, :scope > button:not(.theme-toggle)').forEach(element=>element.remove());
+
+    if(!user){
+      const login=document.createElement('a');
+      login.className='text-button';
+      login.href='login.html';
+      login.textContent='로그인';
+      const signup=document.createElement('a');
+      signup.className='mini-button';
+      signup.href='signup.html';
+      signup.textContent='회원가입';
+      actions.append(login,signup);
+      return;
+    }
+
+    const profile=document.createElement('a');
+    profile.className='text-button';
+    profile.href='profile.html';
+    profile.textContent='프로필';
+    const logout=document.createElement('button');
+    logout.className='mini-button';
+    logout.type='button';
+    logout.textContent='로그아웃';
+    logout.addEventListener('click',async()=>{
+      logout.disabled=true;
+      try{await authRequest({action:'logout',token})}catch(error){}
+      clearAuthToken();
+      location.href='index.html';
+    });
+    actions.append(profile,logout);
+  }
+
+  if(!token){
+    renderAuthActions(null);
+    if(requiresAuth){
+      const next=location.pathname.split('/').pop()||'index.html';
+      location.replace(`login.html?next=${encodeURIComponent(next)}`);
+    }
+    return;
+  }
+
   try{
     const result=await authRequest({action:'me',token});
-    const actions=document.querySelector('.header-actions');
-    if(!actions)return;
-    actions.querySelectorAll('a').forEach(link=>link.remove());
-    const profile=document.createElement('a');profile.className='text-button';profile.href='profile.html';profile.textContent=result.user.nickname||result.user.name;
-    const logout=document.createElement('button');logout.className='mini-button';logout.type='button';logout.textContent='로그아웃';
-    logout.addEventListener('click',async()=>{try{await authRequest({action:'logout',token})}catch(error){}clearAuthToken();location.href='index.html'});
-    actions.append(profile,logout);
-  }catch(error){clearAuthToken();if(document.body.hasAttribute('data-requires-auth'))location.replace('login.html?next=write.html')}
+    renderAuthActions(result.user);
+  }catch(error){
+    clearAuthToken();
+    renderAuthActions(null);
+    if(requiresAuth){
+      const next=location.pathname.split('/').pop()||'index.html';
+      location.replace(`login.html?next=${encodeURIComponent(next)}`);
+    }
+  }
 }
 if(new URLSearchParams(location.search).get('registered')==='1')setTimeout(()=>showToast('회원가입이 완료되었습니다. 로그인해 주세요.'),100);
 refreshAuthUI();
