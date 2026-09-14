@@ -17,3 +17,5 @@
 .reveal{opacity:1;transform:none}
 button:disabled{cursor:wait;opacity:.65}
 .reset-card{width:min(100%,520px)}.reset-step{padding:23px 0;border-top:1px solid var(--line)}.reset-step h2{margin-bottom:15px;font:600 1rem "IBM Plex Sans KR"}.reset-step+.reset-step{margin-top:4px}
+.profile-account-layout{display:grid;gap:32px}.profile-initials,.author-initial{display:grid;place-items:center;border-radius:50%;background:var(--primary);color:#fff;font-weight:700}.profile-initials{width:126px;height:126px;margin:0 auto 17px;font-size:2.4rem}.profile-joined{font-size:.72rem}.author-initial{width:62px;height:62px;flex:0 0 62px;font-size:1.3rem}.author-box>div:last-child{display:flex;flex-direction:column;justify-content:center}.author-box>div:last-child p{font-size:.7rem}.author-box>div:last-child h3{order:2}@media(min-width:768px){.profile-account-layout{grid-template-columns:300px 1fr;gap:65px}.profile-account-layout .profile-card{position:sticky;top:110px}}
+.draft-status{align-self:center;margin-right:auto;color:var(--muted);font-size:.7rem}.post-card,.my-post-item,.article-body{content-visibility:auto;contain-intrinsic-size:auto 260px}

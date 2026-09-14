@@ -48,6 +48,8 @@ const POST_HEADERS = [
   'updatedAt'
 ];
 
+let spreadsheetCache_;
+
 /** Apps Script 편집기에서 최초 1회 직접 실행합니다. */
 function setupAuth() {
   ensureAuthReady_();
@@ -108,11 +110,16 @@ function doPost(e) {
 }
 
 function ensureAuthReady_() {
+  const cache = CacheService.getScriptCache();
+  const readyKey = 'blog-storage-ready-v3';
+  if (cache.get(readyKey) === '1') return;
+
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
 
   try {
-    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    if (cache.get(readyKey) === '1') return;
+    const spreadsheet = getSpreadsheet_();
     ensureSheet_(spreadsheet, USERS_SHEET, USER_HEADERS);
     ensureSheet_(spreadsheet, SESSIONS_SHEET, SESSION_HEADERS);
     ensureSheet_(spreadsheet, POSTS_SHEET, POST_HEADERS);
@@ -121,6 +128,7 @@ function ensureAuthReady_() {
     if (!properties.getProperty('PASSWORD_PEPPER')) {
       properties.setProperty('PASSWORD_PEPPER', createToken_());
     }
+    cache.put(readyKey, '1', 21600);
   } finally {
     lock.releaseLock();
   }
@@ -131,7 +139,7 @@ function listPosts_() {
     .filter(post => post.status === 'published')
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const users = readObjects_(getSheet_(USERS_SHEET));
-  return { ok: true, posts: posts.map(post => publicPost_(post, users)) };
+  return { ok: true, posts: posts.map(post => publicPost_(post, users, false)) };
 }
 
 function getPost_(id) {
@@ -246,15 +254,15 @@ function postRow_(post) {
   });
 }
 
-function publicPost_(post, users) {
+function publicPost_(post, users, includeBody) {
   const user = users.find(item => String(item.id) === String(post.userId)) || {};
-  return {
+  const result = {
     id: String(post.id),
     title: unprotectCell_(post.title),
     category: unprotectCell_(post.category),
     tags: unprotectCell_(post.tags || '').split(',').map(tag => tag.trim()).filter(Boolean),
     summary: unprotectCell_(post.summary || ''),
-    body: unprotectCell_(post.body),
+    preview: unprotectCell_(post.body).slice(0, 120),
     status: String(post.status),
     createdAt: String(post.createdAt),
     updatedAt: String(post.updatedAt),
@@ -263,6 +271,8 @@ function publicPost_(post, users) {
       nickname: String(user.nickname || '').replace(/^'/, '')
     }
   };
+  if (includeBody !== false) result.body = unprotectCell_(post.body);
+  return result;
 }
 
 function signup_(body) {
@@ -614,11 +624,16 @@ function parseBody_(e) {
 }
 
 function getSheet_(name) {
-  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
+  const sheet = getSpreadsheet_().getSheetByName(name);
   if (!sheet) {
     throw new Error(`'${name}' 시트가 없습니다. setupAuth 함수를 실행해 주세요.`);
   }
   return sheet;
+}
+
+function getSpreadsheet_() {
+  if (!spreadsheetCache_) spreadsheetCache_ = SpreadsheetApp.openById(SPREADSHEET_ID);
+  return spreadsheetCache_;
 }
 
 function ensureSheet_(spreadsheet, name, headers) {
