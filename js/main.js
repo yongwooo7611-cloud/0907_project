@@ -1,4 +1,4 @@
-const AUTH_API_URL='https://script.google.com/macros/s/AKfycbzahvo2AjkmtBQqzZT-SD1UBHnW9YXtMCA2VjwsjK89pptL92Jafyq9YKpOZsuwW4Ligw/exec';
+const AUTH_API_URL='https://script.google.com/macros/s/AKfycbwjwWZb4e_stgEbgTN29xfNYckZypHDxonGgFnmiYhuURejA_6Ryha6cUb8kWxqkWTtOw/exec';
 const AUTH_USER_KEY='blog-auth-user-v1',PUBLIC_POSTS_KEY='blog-public-posts-v1',MY_POSTS_KEY='blog-my-posts-v1';
 const AUTH_CACHE_MS=5*60*1000,POST_CACHE_MS=5*60*1000,DETAIL_CACHE_MS=30*60*1000;
 function readCache(storage,key,maxAge=Infinity){try{const cached=JSON.parse(storage.getItem(key)||'null');if(!cached||Date.now()-cached.savedAt>maxAge)return null;return cached.value}catch(error){storage.removeItem(key);return null}}
